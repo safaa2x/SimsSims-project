@@ -1,0 +1,243 @@
+class Worker:
+    def __init__(self, life=100.0):  # Initialize with default life value
+        self.__life = life
+
+    def addLife(self, amount):
+        self.__life = min(100, self.__life + amount)  # Prevents life from exceeding 100%
+
+
+    def removeLife(self, amount):  # Decrease life
+      self.__life -= amount
+
+    def isAlive(self):  # Check if the worker is alive
+        return self.__life > 0
+    
+class Barrack:
+    def __init__(self):
+        self.__waitingRoom = []  # List to store workers
+
+    def addWorker(self, worker):  # Add a worker to the waiting room
+        self.__waitingRoom.append(worker)
+
+    def workerAmount(self):  # Return the number of workers
+        return len(self.__waitingRoom)
+
+    def getWorker(self):  # Retrieve a worker (or None if empty)
+        if self.__waitingRoom:
+            return self.__waitingRoom.pop(0)  # Remove and return the first worker
+        return None
+
+class Food:
+    def __init__(self, quality=50.0):  # Initialize with default quality
+        self.__quality = quality
+
+    def setQuality(self, quality):  # Set the quality of the food
+        self.__quality = quality
+
+    def getQuality(self):  # Get the quality of the food
+        return self.__quality
+
+class Barn:
+    def __init__(self):
+        self.__food = []  # List to store food
+
+    def foodAmount(self):  # Return the number of food items
+        return len(self.__food)
+
+    def addFood(self, food):  # Add food to the barn
+        self.__food.append(food)
+
+    def sendFood(self):  # Send food out of the barn
+        if self.__food:
+            return self.__food.pop(0)  # Remove and return the first food item
+        return None
+
+class Product:
+    pass  
+
+class Factory:
+    def __init__(self, barrack_in, warehouse_out, barrack_out):
+        self.__barrackIn = barrack_in  # Barrack for incoming workers
+        self.__warehouseOut = warehouse_out  # Warehouse for outgoing products
+        self.__barrackOut = barrack_out  # Barrack for outgoing workers
+
+    def accidents(self):  # Simulate accidents (returns a random float)
+        import random
+        return random.uniform(0, 10)
+
+    def produce(self):
+        if self.__barrackIn.workerAmount() > 0:
+            worker = self.__barrackIn.getWorker()
+            if worker.isAlive():
+                worker.removeLife(self.accidents())  # Worker takes damage!
+                if worker.isAlive():
+                    product = Product()
+                    self.__warehouseOut.addProduct(product)
+                    self.__barrackOut.addWorker(worker)  # Send worker back if alive
+                    print("Worker produced a product and survived.")
+                else:
+                    print("Worker died in an accident while working in the factory.")
+            else:
+                print("Worker is not alive and cannot work.")
+        else:
+            print("No workers available to produce.")
+
+
+
+
+class Field:
+    def __init__(self, barrack_in, barrack_out, barn_out):
+        self.__barrackIn = barrack_in  # Barrack for incoming workers
+        self.__barrackOut = barrack_out  # Barrack for outgoing workers
+        self.__barnOut = barn_out  # Barn for outgoing food
+
+    def cultivate(self):
+        if self.__barrackIn.workerAmount() > 0:
+            worker = self.__barrackIn.getWorker()
+            damage = self.accidents()
+            worker.removeLife(damage)  # Arbetaren kan skadas
+            food = Food()
+            self.__barnOut.addFood(food)
+            self.__barrackOut.addWorker(worker)
+            print(f"Worker cultivated food and lost {damage} life.")
+        else:
+            print("No workers available for farming.")
+
+    def accidents(self):  # Simulate accidents (returns a random float)
+        import random
+        return random.uniform(0, 5)
+    
+class Home:
+    def __init__(self, barrack_in, barrack_out, warehouse_in):
+        self.__barrackIn = barrack_in  # Barrack for incoming workers
+        self.__barrackOut = barrack_out  # Barrack for outgoing workers
+        self.__warehouseIn = warehouse_in  # Warehouse for incoming products
+        self.__workerAmount = []  # List to store workers
+
+    def rest(self):
+        if self.__barrackIn.workerAmount() > 0 and self.__warehouseIn.productAmount() > 0:
+            worker = self.__barrackIn.getWorker()
+            product = self.__warehouseIn.sendProduct()  # Ta en produkt från lagret
+            if worker.isAlive():
+                worker.addLife(10)
+                self.__barrackOut.addWorker(worker)
+                print("Worker rested and consumed a product.")
+            else:
+                print("Worker is not alive and cannot rest.")
+        else:
+            print("No workers or products available.")
+
+
+    def funTime(self):
+        """Fun time för att föröka sig och ha mer workers"""
+        if self.__barrackIn.workerAmount() >= 2 and self.__warehouseIn.productAmount() > 0:
+            worker1 = self.__barrackIn.getWorker()
+            worker2 = self.__barrackIn.getWorker()
+            product = self.__warehouseIn.sendProduct()  # Ta en produkt från lagret
+            if worker1.isAlive() and worker2.isAlive():
+                new_worker = Worker(life=50.0)
+                self.__barrackOut.addWorker(worker1)
+                self.__barrackOut.addWorker(worker2)
+                self.__barrackOut.addWorker(new_worker)
+                print("Two workers had fun, consumed a product, and produced a new worker.")
+            else:
+                print("One or both workers are not alive and cannot reproduce.")
+                if worker1.isAlive():
+                    self.__barrackOut.addWorker(worker1)
+                if worker2.isAlive():
+                    self.__barrackOut.addWorker(worker2)
+        else:
+            print("Not enough workers or products available.")
+
+class Warehouse:
+    def __init__(self):
+        self.__products = []  # List to store products
+
+    def productAmount(self):  # Return the number of products
+        return len(self.__products)
+
+    def addProduct(self, product):  # Add a product to the warehouse
+        self.__products.append(product)
+
+    def sendProduct(self):  # Send a product out of the warehouse
+        if self.__products:
+            return self.__products.pop(0)  # Remove and return the first product
+        return None
+    
+class FoodCourt:
+    def __init__(self, barrack_in, barrack_out, barn_in):
+        self.__barrackIn = barrack_in  # Barrack for incoming workers
+        self.__barrackOut = barrack_out  # Barrack for outgoing workers
+        self.__barnIn = barn_in  # Barn for incoming food
+
+    def eatFood(self):
+        if self.__barrackIn.workerAmount() > 0:
+            worker = self.__barrackIn.getWorker()
+            if worker.isAlive():
+                food = self.__barnIn.sendFood()
+                if food:
+                    worker.addLife(food.getQuality() / 10)
+                    poisoning_severity = self.foodPoisoning()
+                    worker.removeLife(poisoning_severity * 5)  
+                    if worker.isAlive():
+                        self.__barrackOut.addWorker(worker)
+                        print(f"Worker ate food with quality {food.getQuality()} but lost {poisoning_severity * 5} life due to poisoning.")
+                    else:
+                        print("Worker died from food poisoning.")
+                else:
+                    print("No food available in the barn.")
+            else:
+                print("Worker is not alive and cannot eat.")
+        else:
+            print("No workers available in the barrack.")
+
+
+    def foodPoisoning(self):  # Simulate food poisoning (returns a random float)
+        import random
+        poisoning_severity = random.uniform(0, 3)  # Random severity between 0 and 3
+        print(f"Food poisoning occurred with severity {poisoning_severity}")
+        return poisoning_severity
+    
+
+
+
+#Scenario 1
+barrack1 = Barrack()
+barrack2 = Barrack()
+worker = Worker()
+barrack2.addWorker(worker)
+print("Workers in Barrack1:", barrack1.workerAmount())  # Expected: 0
+print("Workers in Barrack2:", barrack2.workerAmount())  # Expected: 1
+
+#Scenario 2
+worker_moved = barrack2.getWorker()
+if worker_moved:
+    barrack1.addWorker(worker_moved)
+
+print("Workers in Barrack1:", barrack1.workerAmount())  # Expected: 1
+print("Workers in Barrack2:", barrack2.workerAmount())  # Expected: 0
+
+# Scenario 3
+
+warehouse = Warehouse()
+factory = Factory(barrack1, warehouse, barrack2)  # Factory takes workers from Barrack1
+
+factory.produce()
+
+print("Products in Warehouse:", warehouse.productAmount())  # Expected: 1 (if worker survived)
+print("Workers in Barrack1:", barrack1.workerAmount())  # Expected: 0
+print("Workers in Barrack2:", barrack2.workerAmount())  # Expected: 1 (if survived)
+
+# Full scenario / 4
+
+# Create multiple workers
+for _ in range(3):
+    barrack1.addWorker(Worker())
+
+# Run production multiple times
+for _ in range(3):
+    factory.produce()
+
+# Check results
+print("Final products in Warehouse:", warehouse.productAmount())
+print("Final workers in Barrack2:", barrack2.workerAmount())
